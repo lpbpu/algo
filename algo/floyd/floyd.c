@@ -1,0 +1,340 @@
+#include <stdio.h>
+
+#define INF 9999
+
+#define MAXTOP 3
+#define MAXHOP 5
+
+
+
+int matrix[]={
+    0,  1,  5,INF,INF,INF,INF,INF,INF,
+    1,  0,  3,  7,  5,INF,INF,INF,INF,
+    5,  3,  0,INF,  1,  7,INF,INF,INF,
+    INF,  7,INF,  0,  2,INF,  3,INF,INF,
+    INF,  5,  1,  2,  0,  3,  6,  9,INF,
+    INF,INF,  7,INF,  3,  0,INF,  5,INF,
+    INF,INF,INF,  3,  6,INF,  0,  2,  7,
+    INF,INF,INF,INF,  9,  5,  2,  0,  4,
+    INF,INF,INF,INF,INF,INF,  7,  4,  0
+};
+
+
+int omatrix[9*9];
+
+
+int path1[9*9];
+int path2[9*9*9];
+
+int hop[9*9];
+
+int top[9*9*MAXTOP];
+int value[9*9*MAXTOP];
+
+
+
+
+#define M(i,j)  matrix[i*9+j]
+#define PATH(i,j)  path1[i*9+j]
+#define PATH2(i,j,k) path2[i*9*9+j*9+k]
+
+#define HOP(i,j) hop[i*9+j]
+
+
+#define TOP(i,j,t) top[i*9*MAXTOP+j*MAXTOP+t]
+#define VALUE(i,j,t) value[i*9*MAXTOP+j*MAXTOP+t]
+
+
+#define OM(i,j) omatrix[i*9+j]
+
+
+void init_omatrix()
+{
+	int i,j;
+	for (i=0;i<9;i++){
+		for (j=0;j<9;j++){
+			OM(i,j)=M(i,j);
+		}
+	}
+			
+}
+
+
+void init_path(){
+	int i,j,k;
+	for (i=0;i<9;i++){
+		for (j=0;j<9;j++){
+			if (i==j)
+				PATH(i,j)=i;
+			else
+				PATH(i,j)=j;
+		}
+	}
+
+
+
+	for (i=0;i<9;i++){
+		for (j=0;j<9;j++){
+			PATH2(i,j,0)=i;
+			PATH2(i,j,1)=j;
+
+			HOP(i,j)=1;
+
+			for (k=2;k<9;k++){
+				PATH2(i,j,k)=-1;
+			}
+		}
+	}	
+			
+
+	for (i=0;i<9;i++){
+		for (j=0;j<9;j++) {
+			for (k=0;k<MAXTOP;k++) {
+				TOP(i,j,k)=-1;
+				VALUE(i,j,k)=INF;
+			}
+		}
+	}	
+
+}
+
+
+void addpath(int i,int j,int k)
+{
+	int v,l;
+	for (v=0;v<9;v++){
+		if (PATH2(i,k,v)!=-1){
+			PATH2(i,j,v)=PATH2(i,k,v);
+		}else{
+			break;
+		}
+	}
+
+	for (l=1;l<9;l++){
+		if (PATH2(k,j,l)!=-1){
+			PATH2(i,j,v++)=PATH2(k,j,l);
+		}else{
+			PATH2(i,j,v)=-1;
+			break;
+		}
+
+	}
+
+	
+
+}
+
+
+void compute_shortest_path()
+{
+	int i,j,k;
+	for (k=0;k<9;k++){
+		for (i=0;i<9;i++){
+			for (j=0;j<9;j++){
+				if ((i==j) || (j==k) || (i==k))
+					continue;
+
+				if (M(i,k)+M(k,j)<M(i,j)){
+					M(i,j)=M(i,k)+M(k,j);
+					PATH(i,j)=k;
+					HOP(i,j)=HOP(i,k)+HOP(k,j);
+					addpath(i,j,k);
+				}
+			}
+		}		
+	}
+
+
+}
+
+
+
+void add_second_path(int i,int j,int k,int newvalue)
+{
+	int t;
+	int t1;
+
+	for (t=0;t<MAXTOP;t++){
+		if (newvalue<VALUE(i,j,t)){
+			for (t1=MAXTOP-1;t1>t;t1--) {
+				TOP(i,j,t1)=TOP(i,j,t1-1);
+				VALUE(i,j,t1)=VALUE(i,j,t1-1);
+			}
+
+			TOP(i,j,t)=k;
+			VALUE(i,j,t)=newvalue;
+			break;
+		}
+
+	}	
+
+}
+
+
+int check_second_loop(int i,int j,int k)
+{
+	//k->j not exist i
+	int m;
+	int exist=0;
+
+	for (m=1;m<8;m++){
+		if (PATH2(j,k,m)==-1)
+			break;
+		if (PATH2(j,k,m)==i){
+			exist=1;
+			break;
+		}
+
+	}
+
+	return exist;
+
+}
+
+void compute_second_path()
+{
+	int i,j,k;
+	int newlen;
+
+
+	for (i=0;i<9;i++){
+		for (j=0;j<9;j++){
+			for (k=0;k<9;k++){
+				if ((i==j) || (i==k) || (j==k))
+					continue;
+			
+				//if (HOP(i,k)!=1)
+				//	continue;
+
+				if (OM(i,k)==INF)
+					continue;
+
+				if (PATH2(i,j,1)==k)
+					continue;
+
+				newlen=OM(i,k)+M(k,j);
+				
+				if (newlen<VALUE(i,j,MAXTOP-1)){
+					if (check_second_loop(i,j,k))
+						continue;
+					
+					add_second_path(i,j,k,newlen);
+					
+				}
+
+
+
+			}
+		}
+	}
+
+
+
+}
+
+
+
+void print_path()
+{
+	int i,j;
+	for (i=0;i<9;i++){
+		for (j=0;j<9;j++){
+			printf("%d ",PATH(i,j));
+		}
+		printf("\n");
+	}
+
+	printf("\n");
+	
+
+
+}
+
+
+void print_matrix()
+{
+	int i,j;
+	for (i=0;i<9;i++){
+		for (j=0;j<9;j++){
+			printf("%d ",M(i,j));
+		}
+		printf("\n");
+	}
+
+	printf("\n");
+}
+
+
+void print_path2()
+{
+	int i,j,k;
+	for (i=0;i<9;i++){
+		for (j=0;j<9;j++){
+			if (i==j) continue;
+			printf("%d->%d(%d):",i,j,HOP(i,j));
+			for (k=0;k<9;k++){
+				if (PATH2(i,j,k)==-1) {
+					printf("\n");
+					break;
+				}else{
+					printf("%d->",PATH2(i,j,k));
+				}
+			}
+		}
+	}			
+}
+
+void print_second_path()
+{
+	int i,j,t,k;
+	int p;
+
+	for (i=0;i<9;i++){
+		for (j=0;j<9;j++){
+			if (i==j) continue;
+			
+			for (t=0;t<MAXTOP;t++) {
+				printf("%d->%d(%d):%d->",i,j,t,i);
+
+				p=TOP(i,j,t);
+				if (p==-1){
+					printf("\n");
+					continue;
+				}
+
+				printf("%d->",p);
+
+				for (k=1;k<9;k++){
+					if (PATH2(p,j,k)==-1) {
+						printf("\n");
+						break;
+					}else{
+						printf("%d->",PATH2(p,j,k));
+					}
+				}
+			}
+		}
+	}
+
+	
+			
+}
+
+int main()
+{
+	print_matrix();
+	
+	init_omatrix();
+	init_path();
+	compute_shortest_path();
+	print_path();
+	print_path2();
+
+	printf("\n");
+
+	compute_second_path();
+	print_second_path();
+		
+
+	return 0;
+}
