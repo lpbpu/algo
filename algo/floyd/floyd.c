@@ -195,7 +195,10 @@ int check_second_loop(int i,int j,int k)
 int check_top_loop(int i,int j,int k)
 {
 	//such as a-*-b-*-c with b-*-a-*-c
-	
+	int exist=0;
+
+
+	return exist;	
 	
 }
 
