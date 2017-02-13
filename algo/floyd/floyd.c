@@ -194,9 +194,45 @@ int check_second_loop(int i,int j,int k)
 
 int check_top_loop(int i,int j,int k)
 {
-	//such as a-*-b-*-c with b-*-a-*-c
+	//such as a-*-b-*-c with b-*-a-*-c , ensure k->j not exist i where k->j in exist top path
 	int exist=0;
+    int t,m,m1;
 
+	if (k==i) return 1;
+
+
+	//k->j top path:  k->TOP(k,j,t) (m) -> j
+
+    for (t=0;t<MAXTOP;t++){
+		m=TOP(k,j,t);
+
+		if (m<=0) {
+			continue;
+		}
+
+		if (m==i) {
+			exist=1;
+			break;
+		}
+
+		for (m1=1;m1<9;m1++){
+			if (PATH2(m,j,m1)==-1) {
+				break;
+			}
+
+			if (PATH2(m,j,m1)==i) {
+				exist=1;
+				break;
+			}
+
+		}
+
+		if (1==exist) break;	
+	
+
+	}
+	
+	
 
 	return exist;	
 	
@@ -230,6 +266,9 @@ void compute_second_path()
 						continue;
 
 					if ((HOP(i,j)>1) && (check_second_loop(PATH2(i,j,1),j,k))) // hop(i,j)>1 k->j not exist i+1
+						continue;
+
+					if (check_top_loop(i,j,k)) 	//check second path loop
 						continue;
 					
 					add_second_path(i,j,k,newlen);
