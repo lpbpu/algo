@@ -173,14 +173,13 @@ void add_second_path(int i,int j,int k,int newvalue)
 
 int check_second_loop(int i,int j,int k)
 {
-	//k->j not exist i
 	int m;
 	int exist=0;
 
 	for (m=1;m<8;m++){
-		if (PATH2(j,k,m)==-1)
+		if (PATH2(k,j,m)==-1)
 			break;
-		if (PATH2(j,k,m)==i){
+		if (PATH2(k,j,m)==i){
 			exist=1;
 			break;
 		}
@@ -189,6 +188,15 @@ int check_second_loop(int i,int j,int k)
 
 	return exist;
 
+}
+
+
+
+int check_top_loop(int i,int j,int k)
+{
+	//such as a-*-b-*-c with b-*-a-*-c
+	
+	
 }
 
 void compute_second_path()
@@ -215,7 +223,10 @@ void compute_second_path()
 				newlen=OM(i,k)+M(k,j);
 				
 				if (newlen<VALUE(i,j,MAXTOP-1)){
-					if (check_second_loop(i,j,k))
+					if (check_second_loop(i,j,k))		//k->j not exist i
+						continue;
+
+					if ((HOP(i,j)>1) && (check_second_loop(PATH2(i,j,1),j,k))) // hop(i,j)>1 k->j not exist i+1
 						continue;
 					
 					add_second_path(i,j,k,newlen);
