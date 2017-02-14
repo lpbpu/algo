@@ -250,10 +250,10 @@ void compute_second_path()
 				if ((i==j) || (i==k) || (j==k))
 					continue;
 			
-				//if (HOP(i,k)!=1)
+				//if (HOP(i,k)!=1)	//find less path but fast
 				//	continue;
 
-				if (OM(i,k)==INF)
+				if (OM(i,k)==INF)	//find more path but slow
 					continue;
 
 				if (PATH2(i,j,1)==k)
