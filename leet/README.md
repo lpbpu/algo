@@ -1,1 +1,1 @@
-leet test use C
+leet test use C or go
