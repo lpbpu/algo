@@ -2,7 +2,7 @@
 
 #define INF 9999
 
-#define MAXTOP 3
+#define MAXTOP 3	/* 3条次优路径 */
 #define MAXHOP 5
 
 
@@ -34,18 +34,18 @@ int value[9*9*MAXTOP];
 
 
 
-#define M(i,j)  matrix[i*9+j]
-#define PATH(i,j)  path1[i*9+j]
-#define PATH2(i,j,k) path2[i*9*9+j*9+k]
+#define M(i,j)  matrix[i*9+j]		/* 原始matrix,计算最优后，为i->j的最优距离 */
+#define PATH(i,j)  path1[i*9+j]		/* 最优路径 inplace,初始化(i,i)=i,(i,j)=j*/
+#define PATH2(i,j,k) path2[i*9*9+j*9+k] /* 最优路径，初始化(i,j,0)=i,(i,j,1)=j,(i,j,x)=-1 */
 
-#define HOP(i,j) hop[i*9+j]
-
-
-#define TOP(i,j,t) top[i*9*MAXTOP+j*MAXTOP+t]
-#define VALUE(i,j,t) value[i*9*MAXTOP+j*MAXTOP+t]
+#define HOP(i,j) hop[i*9+j]  /* i->j的跳数，初始为1 */
 
 
-#define OM(i,j) omatrix[i*9+j]
+#define TOP(i,j,t) top[i*9*MAXTOP+j*MAXTOP+t] 	  /* 次优路径，新选择的k点,次优路径为i->k plus 最优路径(k->j) k<>PATH2(i,j,1) */
+#define VALUE(i,j,t) value[i*9*MAXTOP+j*MAXTOP+t] /* 次优路径，存储i->j的次优路径对应的次优距离, VALUE(i,j,MAXTOP-1)为最次优路径 */
+
+
+#define OM(i,j) omatrix[i*9+j]	/* matrix的备份 */
 
 
 void init_omatrix()
@@ -99,6 +99,7 @@ void init_path(){
 }
 
 
+/* fix path from i->j to i->k plus k->j */
 void addpath(int i,int j,int k)
 {
 	int v,l;
@@ -136,7 +137,7 @@ void compute_shortest_path()
 
 				if (M(i,k)+M(k,j)<M(i,j)){
 					M(i,j)=M(i,k)+M(k,j);
-					PATH(i,j)=k;
+					PATH(i,j)=PATH(i,k);
 					HOP(i,j)=HOP(i,k)+HOP(k,j);
 					addpath(i,j,k);
 				}
@@ -238,6 +239,9 @@ int check_top_loop(int i,int j,int k)
 	
 }
 
+
+
+/* try to find another k<>PATH2(i,j,1),which HOP(i,k)=1 or OM(i,k)=1,compute second path */
 void compute_second_path()
 {
 	int i,j,k;
@@ -380,7 +384,7 @@ int main()
 	init_omatrix();
 	init_path();
 	compute_shortest_path();
-	print_path();
+	print_path();	/* inplace:0->6:1 1->6:2 2->6:4 4->6:3 3->6:6 */
 	print_path2();
 
 	printf("\n");
